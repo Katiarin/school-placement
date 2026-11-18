@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Размещение школ — Фрунзенский район</title>
+  <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 3 1 9l11 6 9-4.9V17h2V9L12 3zm0 13.5L4.6 12.5 3 13.4l9 5 9-5-1.6-.9L12 16.5z"/></svg>
+    </div>
+    <div class="brand-text">
+      <h1>Размещение школ: Фрунзенский район</h1>
+      <p>Оценка обеспеченности населения местами в общеобразовательных организациях</p>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <span id="dataCheck" class="badge badge-neutral">Проверка данных…</span>
+    <button class="btn btn-ghost" id="btnAbout" type="button">Методика и данные</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <section class="card">
+      <div class="card-head">
+        <h2>Итоговые показатели</h2>
+        <span class="pill" id="scenarioPill">Исходное состояние</span>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi">
+          <span class="kpi-label">Вместимость сети</span>
+          <span class="kpi-value" id="kpiCapacity">—</span>
+          <span class="kpi-sub" id="kpiCapacitySub">мест</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label">Дефицит мест</span>
+          <span class="kpi-value" id="kpiDeficit">—</span>
+          <span class="kpi-sub" id="kpiDeficitSub">мест</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label">Обеспеченность</span>
+          <span class="kpi-value" id="kpiProvision">—</span>
+          <span class="kpi-sub" id="kpiProvisionSub">доля потребности в нормативе 15 мин</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label">Прирост сценария</span>
+          <span class="kpi-value kpi-accent" id="kpiAdded">0</span>
+          <span class="kpi-sub" id="kpiAddedSub">мест добавлено</span>
+        </div>
+      </div>
+      <p class="hint" id="summaryHint">Задайте школы или выполните автоматический подбор.</p>
+    </section>
+
+    <section class="card">
+      <h2>1. Свои варианты размещения</h2>
+      <label class="field">Квартал
+        <select id="blockSelect" class="control"></select>
+      </label>
+      <div class="row row-end">
+        <label class="field grow">Вместимость школы, мест
+          <input id="capacityInput" class="control" type="number" inputmode="numeric" min="1" step="1" value="600">
+        </label>
+        <button id="btnAddSchool" class="btn btn-primary" type="button">Добавить</button>
+      </div>
+      <p class="hint">Можно добавить несколько школ в разные кварталы. Вместимость — целое положительное число мест.</p>
+      <ul id="schoolList" class="school-list"></ul>
+      <div class="row">
+        <button id="btnCalculate" class="btn btn-primary grow" type="button">Рассчитать сценарий</button>
+        <button id="btnReset" class="btn btn-ghost" type="button">Сбросить</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>2. Автоматический подбор квартала</h2>
+      <div class="row row-end">
+        <label class="field grow">Вместимость новой школы, мест
+          <input id="autoCapacity" class="control" type="number" inputmode="numeric" min="1" step="1" value="600">
+        </label>
+        <button id="btnAuto" class="btn btn-accent" type="button">Разместить автоматически</button>
+      </div>
+      <p class="hint">Проверяются все кварталы территории: каждый вариант — одна школа заданной вместимости.
+        Строки таблицы — независимые варианты, а не одновременное размещение школ. Рекомендуются только
+        кварталы с населением и дефицитом мест; остальные проверенные кварталы остаются в таблице для
+        справки. ★ — рекомендованный квартал: при равном сокращении дефицита по району выбирается квартал
+        с наибольшим дефицитом мест.</p>
+      <div id="autoProgress" class="progress hidden" aria-live="polite">
+        <div class="progress-track"><span id="autoBar" class="progress-bar"></span></div>
+        <div class="progress-text" id="autoProgressText">Проверено 0 из 0 кварталов территории</div>
+      </div>
+      <div id="autoSummary" class="auto-summary"></div>
+      <div id="autoTop" class="auto-top"></div>
+    </section>
+
+    <section class="card">
+      <h2>3. Сравнение вариантов</h2>
+      <label class="field">Вариант 1 — одна школа 600 мест
+        <select id="threeA" class="control"></select>
+      </label>
+      <label class="field">Вариант 2 — две школы по 300 мест
+        <select id="threeB1" class="control"></select>
+      </label>
+      <label class="field">
+        <span class="sr-only">Второй квартал варианта 2</span>
+        <select id="threeB2" class="control"></select>
+      </label>
+      <label class="field">Вариант 3 — автоматический подбор, 600 мест
+        <select id="threeC" class="control"></select>
+      </label>
+      <div class="row">
+        <button id="btnThreeCompare" class="btn btn-primary grow" type="button">Сравнить варианты</button>
+        <button id="btnThreeAuto" class="btn btn-ghost" type="button">Найти автоматически</button>
+      </div>
+      <p class="hint">Можно сравнить два или три варианта. В ненужном варианте выберите «— не сравнивать»;
+        прочерк в любом из двух кварталов варианта 2 отключает весь вариант.</p>
+      <div id="threeResult" class="three-result"></div>
+    </section>
+
+    <section class="card">
+      <h2>4. Сохранённые сценарии</h2>
+      <div class="row">
+        <input id="saveName" class="control grow" type="text" maxlength="80" placeholder="Название сценария">
+        <button id="btnSave" class="btn btn-primary" type="button">Сохранить</button>
+      </div>
+      <ul id="savedList" class="saved-list"></ul>
+      <button id="btnCompareSaved" class="btn btn-ghost wide" type="button">Сравнить сохранённые</button>
+      <p class="hint">Сценарии хранятся в браузере на этом компьютере.</p>
+    </section>
+  </aside>
+
+  <main class="content">
+    <div class="map-card">
+      <div class="map-toolbar">
+        <div class="segmented" id="mapModes" role="group" aria-label="Режим карты">
+          <button data-mode="baseline" class="active" type="button">Исходное состояние</button>
+          <button data-mode="scenario" type="button">Сценарий</button>
+          <button data-mode="change" type="button">Изменение</button>
+        </div>
+        <select id="changeMetric" class="control compact hidden" aria-label="Показатель изменения">
+          <option value="provision">Δ обеспеченности, п.п.</option>
+          <option value="deficit">Δ дефицита, мест</option>
+        </select>
+        <label class="chk"><input type="checkbox" id="tilesToggle" checked> Подложка OSM</label>
+      </div>
+      <div id="map" class="map"></div>
+      <div id="legend" class="legend"></div>
+      <div id="blockCard" class="block-card hidden"></div>
+      <div id="toasts" class="toasts" aria-live="polite"></div>
+    </div>
+
+    <section class="tables">
+      <div class="tabs">
+        <button data-tab="blocks" class="active" type="button">Результаты по кварталам</button>
+        <button data-tab="auto" type="button">Автоподбор</button>
+        <button data-tab="compare" type="button">Сравнение сценариев</button>
+        <div class="tabs-actions">
+          <button id="btnExport" class="btn btn-ghost" type="button">Экспорт CSV</button>
+        </div>
+      </div>
+
+      <div class="tab-panel active" id="tab-blocks">
+        <div class="table-tools">
+          <input id="blockFilter" class="control compact" type="search" placeholder="Поиск по номеру квартала">
+          <span class="hint-inline" id="blocksTableHint"></span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="blocksTable">
+            <thead>
+            <tr>
+              <th data-sort="block_id">Квартал</th>
+              <th data-sort="population" class="num">Население,<br>чел.</th>
+              <th data-sort="capacity_base" class="num">Вместимость, мест<br>база</th>
+              <th data-sort="capacity" class="num">Вместимость, мест<br>сценарий</th>
+              <th data-sort="demand" class="num">Потребность,<br>мест</th>
+              <th data-sort="provision_base" class="num">Обеспеченность, %<br>база</th>
+              <th data-sort="provision" class="num">Обеспеченность, %<br>сценарий</th>
+              <th data-sort="deficit_base" class="num">Дефицит, мест<br>база</th>
+              <th data-sort="deficit" class="num">Дефицит, мест<br>сценарий</th>
+              <th data-sort="deficit_delta" class="num">Δ дефицита,<br>мест</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-auto">
+        <div class="table-tools">
+          <label class="chk"><input type="checkbox" id="autoOnlyNeeded" checked> Только кварталы, где нужна школа</label>
+          <span class="hint-inline" id="autoTableHint">Автоматический подбор ещё не выполнялся.</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="autoTable">
+            <thead>
+            <tr>
+              <th class="num">№</th>
+              <th data-sort="block_id">Квартал</th>
+              <th data-sort="population" class="num">Население,<br>чел.</th>
+              <th data-sort="capacity_after" class="num">Вместимость<br>квартала, мест</th>
+              <th data-sort="deficit_before" class="num">Дефицит<br>квартала, мест<br>до</th>
+              <th data-sort="deficit_after_block" class="num">Дефицит<br>квартала, мест<br>после</th>
+              <th data-sort="deficit_after" class="num">Дефицит<br>района, мест<br>после</th>
+              <th data-sort="deficit_reduction" class="num">Сокращение<br>по району, мест</th>
+              <th data-sort="provision_after" class="num">Обеспеченность<br>района, % после</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-compare">
+        <div class="table-tools">
+          <span class="hint-inline" id="compareTableHint">Сохраните сценарии или сравните два-три варианта. Для каждого сценария ниже показан локальный эффект в кварталах размещения.</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="compareTable">
+            <thead>
+            <tr>
+              <th>Сценарий</th>
+              <th>Школы</th>
+              <th class="num">Добавлено мест</th>
+              <th class="num">Вместимость сети, мест</th>
+              <th class="num">Дефицит района, мест<br><span class="th-sub">было → стало</span></th>
+              <th class="num">Сокращение дефицита, мест</th>
+              <th class="num">Обеспеченность района, %<br><span class="th-sub">было → стало (Δ п.п.)</span></th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer class="footer">
+  <div>
+    <strong>Источники:</strong> BlocksNet-data v0.0.1 (кварталы, население, школы, граф дорог, Санкт-Петербург);
+    результаты практики 2 (матрица времени в пути, показатели кварталов); BlocksNet 1.0.0a9.
+  </div>
+  <div>
+    <strong>Метод:</strong> норматив 120 мест на 1000 жителей, доступность 15 минут на автомобиле,
+    конкурентное распределение спроса (LP). Подробности — в кнопке «Методика и данные».
+  </div>
+  <div class="footer-note">
+    Население и вместимость школ по кварталам — расчётные значения практики 2, а не официальная статистика.
+    Приложение сравнивает обеспеченность населения местами в школах для разных вариантов размещения по кварталам.
+    Оно не выбирает земельный участок и не оценивает возможность строительства — для этого требуется отдельное
+    градостроительное обоснование.
+  </div>
+</footer>
+
+<dialog id="aboutDialog" class="dialog">
+  <div class="dialog-head">
+    <h2>Методика, данные и допущения</h2>
+    <button class="btn btn-ghost" id="btnCloseAbout" type="button">Закрыть</button>
+  </div>
+  <div class="dialog-body" id="aboutBody"></div>
+</dialog>
+
+<script src="/static/vendor/leaflet/leaflet.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>

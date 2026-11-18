@@ -1,0 +1,60 @@
+{
+  "app_schema": 1,
+  "generated_at": "2026-11-18T08:01:08+00:00",
+  "source_dir": "C:\\Users\\Катя\\Documents\\frunzenskiy-ai",
+  "blocksnet_version": "1.0.0a9",
+  "params": {
+    "service": "school",
+    "accessibility_min": 15,
+    "demand_per_1000": 120,
+    "self_supply": true,
+    "max_depth": 1,
+    "travel_mode": "car"
+  },
+  "counts": {
+    "blocks": 208,
+    "context_blocks_in_source_matrix": 472,
+    "blocks_with_population": 117,
+    "blocks_with_school_capacity": 41
+  },
+  "matrix_check": {
+    "district_blocks": 208,
+    "source_matrix_size": 472,
+    "all_ids_in_index": true,
+    "all_ids_in_columns": true
+  },
+  "baseline": {
+    "population_total": 399750.0,
+    "demand_total": 48033.0,
+    "capacity_total": 24722,
+    "within_total": 24722.0,
+    "deficit_total": 23311.0,
+    "provision_total": 0.5146878187912477,
+    "mean_provision": 0.21282244181132468,
+    "blocks_total": 208,
+    "blocks_with_population": 117,
+    "blocks_with_deficit": 111,
+    "blocks_with_school_capacity": 41
+  },
+  "verification": {
+    "ok": true,
+    "max_abs_diff": 1.1102230246251565e-16,
+    "compared_blocks": 117,
+    "mean_abs_diff": 5.337610695313253e-18,
+    "stored_results_file": "outputs/frunzensky_indicators.csv"
+  },
+  "inputs": {
+    "frunzensky_indicators.csv": {
+      "sha256": "fdeb6d4b5142bdd9e975a95a01859f6346f96f7a271816dbeee10b349694ce93",
+      "size": 220271
+    },
+    "frunzensky_blocks.geojson": {
+      "sha256": "1d5a562ce095951d96b27e6374d6db3f8bf694ff332c21f6fa0ade0c74062d60",
+      "size": 1409288
+    },
+    "accessibility_matrix_drive.parquet": {
+      "sha256": "49031dcc23bedb312058aa75265e4ad58ac3582ce16858ac864aa07b53450d79",
+      "size": 1230054
+    }
+  }
+}
